@@ -1,6 +1,7 @@
 import os
 import time
 import threading
+from typing import Optional, List, Tuple
 import httpx
 import streamlit as st
 import streamlit.components.v1 as st_components
@@ -307,7 +308,7 @@ def _run_pipeline_bg(
 
 
 # ── UI helpers ────────────────────────────────────────────────────────────────
-def score_color(score: int) -> tuple[str, str, str]:
+def score_color(score: int) -> Tuple[str, str, str]:
     """Returns (text_color, bg_color, border_color) based on score."""
     if score >= 7:
         return "#16a34a", "#f0fdf4", "#bbf7d0"
@@ -446,8 +447,8 @@ def render_comparison(original_eval: dict, fixed_eval: dict):
 def build_scorecard_report(
     evaluation: dict,
     original_prompt: str,
-    stress_result: dict | None = None,
-    hallucination_result: dict | None = None,
+    stress_result: Optional[dict] = None,
+    hallucination_result: Optional[dict] = None,
 ) -> str:
     """Build a human-readable text report of the evaluation."""
     dims = evaluation.get("dimensions", [])
@@ -1077,7 +1078,7 @@ if st.session_state.evaluation:
                         with st.spinner(f"Evaluating Variant {i + 1}…"):
                             try:
                                 ev = call_evaluate(variant_text)
-                                evals: list[dict | None] = list(variant_evals)
+                                evals: List[Optional[dict]] = list(variant_evals)
                                 while len(evals) <= i:
                                     evals.append(None)
                                 evals[i] = ev
@@ -1131,7 +1132,7 @@ if st.session_state.evaluation:
                                     new_variants = list(variants)
                                     new_variants[i] = result.get("fixed_prompt", variant_text)
                                     st.session_state.fix_result = {"variants": new_variants}
-                                    new_evals: list[dict | None] = list(variant_evals)
+                                    new_evals: List[Optional[dict]] = list(variant_evals)
                                     if i < len(new_evals):
                                         new_evals[i] = None
                                     st.session_state.variant_evaluations = new_evals

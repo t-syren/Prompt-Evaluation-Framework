@@ -1,4 +1,5 @@
 import os
+from typing import Optional
 import httpx
 import streamlit as st
 
@@ -139,7 +140,7 @@ def load_current_config() -> dict:
         return {}
 
 
-def save_config(base_url: str, llm_url: str, token: str, defaults: dict | None = None) -> bool:
+def save_config(base_url: str, llm_url: str, token: str, defaults: Optional[dict] = None) -> bool:
     try:
         payload: dict = {
             "databricks_base_url": base_url,
