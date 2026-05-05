@@ -1,0 +1,6 @@
+{
+  "pythonPath": "/opt/homebrew/opt/python@3.11/bin/python3.11",
+  "venvPath": ".",
+  "pythonVersion": "3.11",
+  "typeCheckingMode": "basic"
+}
