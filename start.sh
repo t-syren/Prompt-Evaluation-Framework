@@ -4,14 +4,14 @@ set -e
 echo "Installing dependencies..."
 pip install -r requirements.txt -q
 
-echo "Starting FastAPI backend on port 8000..."
-uvicorn backend.main:app --host 0.0.0.0 --port 8000 &
+echo "Starting FastAPI backend on port 8001..."
+uvicorn backend.main:app --host 0.0.0.0 --port 8001 &
 BACKEND_PID=$!
 
 # Wait until backend is ready
 echo "Waiting for backend..."
 for i in $(seq 1 30); do
-    if curl -sf http://localhost:8000/docs > /dev/null 2>&1; then
+    if curl -sf http://localhost:8001/docs > /dev/null 2>&1; then
         echo "Backend is up."
         break
     fi

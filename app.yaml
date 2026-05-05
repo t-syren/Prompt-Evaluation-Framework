@@ -2,6 +2,6 @@ command: ['bash', 'start.sh']
 
 env:
   - name: 'BACKEND_URL'
-    value: 'http://localhost:8000'
+    value: 'http://localhost:8001'
   - name: 'STREAMLIT_GATHER_USAGE_STATS'
     value: 'false'
