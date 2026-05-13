@@ -175,19 +175,27 @@ button[data-testid="baseButton-primary"]:hover,
   transform: translateY(-1px) !important;
   box-shadow: 0 8px 28px rgba(255,54,33,0.6) !important;
 }}
-.stButton > button:not([kind="primary"]) {{
-  background: rgba(255,255,255,0.05) !important;
-  border: 1px solid rgba(255,255,255,0.12) !important;
-  color: rgba(255,255,255,0.6) !important;
+.stButton > button:not([kind="primary"]),
+button[data-testid="baseButton-secondary"],
+[data-testid="stBaseButton-secondary"] {{
+  background: rgba(255,255,255,0.07) !important;
+  border: 1px solid rgba(255,255,255,0.15) !important;
+  color: rgba(255,255,255,0.75) !important;
+  -webkit-text-fill-color: rgba(255,255,255,0.75) !important;
 }}
 .stButton > button:not([kind="primary"]) p,
-.stButton > button:not([kind="primary"]) * {{
-  color: rgba(255,255,255,0.6) !important;
-  -webkit-text-fill-color: rgba(255,255,255,0.6) !important;
+.stButton > button:not([kind="primary"]) *,
+button[data-testid="baseButton-secondary"] *,
+[data-testid="stBaseButton-secondary"] * {{
+  color: rgba(255,255,255,0.75) !important;
+  -webkit-text-fill-color: rgba(255,255,255,0.75) !important;
 }}
-.stButton > button:not([kind="primary"]):hover {{
-  background: rgba(255,255,255,0.08) !important;
-  color: rgba(255,255,255,0.85) !important;
+.stButton > button:not([kind="primary"]):hover,
+button[data-testid="baseButton-secondary"]:hover,
+[data-testid="stBaseButton-secondary"]:hover {{
+  background: rgba(255,255,255,0.12) !important;
+  color: rgba(255,255,255,0.95) !important;
+  -webkit-text-fill-color: rgba(255,255,255,0.95) !important;
 }}
 .stDownloadButton > button, [data-testid="stDownloadButton"] button {{
   background: rgba(255,255,255,0.05) !important;
@@ -409,15 +417,17 @@ def inject_sidebar_killer() -> None:
             '[data-testid="stSidebarCollapsedControl"]{display:none!important;visibility:hidden!important;}'
           ].join('');
 
-          // Input overrides — injected directly into head so they beat emotion CSS
+          // Input + secondary button overrides — beat emotion CSS by being in head
           var INPUT_CSS = [
             'textarea,input[type="text"],input[type="password"],input[type="email"],input[type="number"],input[type="search"]{',
-            'color:#09090e!important;',
-            '-webkit-text-fill-color:#09090e!important;',
-            'caret-color:#FF3621!important;}',
+            'color:#09090e!important;-webkit-text-fill-color:#09090e!important;caret-color:#FF3621!important;}',
             'textarea::placeholder,input::placeholder{',
-            'color:rgba(0,0,0,0.35)!important;',
-            '-webkit-text-fill-color:rgba(0,0,0,0.35)!important;}'
+            'color:rgba(0,0,0,0.35)!important;-webkit-text-fill-color:rgba(0,0,0,0.35)!important;}',
+            'button[data-testid="baseButton-secondary"],[data-testid="stBaseButton-secondary"]{',
+            'background:rgba(255,255,255,0.07)!important;border:1px solid rgba(255,255,255,0.15)!important;}',
+            'button[data-testid="baseButton-secondary"] *,[data-testid="stBaseButton-secondary"] *,',
+            'button[data-testid="baseButton-secondary"] p,[data-testid="stBaseButton-secondary"] p{',
+            'color:rgba(255,255,255,0.75)!important;-webkit-text-fill-color:rgba(255,255,255,0.75)!important;}'
           ].join('');
 
           // Inject persistent <style> into parent <head>
