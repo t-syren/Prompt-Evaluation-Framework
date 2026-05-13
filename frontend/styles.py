@@ -204,12 +204,10 @@ button[data-testid="baseButton-primary"]:hover,
 /* ── TEXT INPUTS ── */
 [data-testid="stTextArea"] textarea,
 .stTextArea textarea {{
-  background: rgba(255,255,255,0.04) !important;
-  background-color: rgba(255,255,255,0.04) !important;
   border: 1px solid rgba(255,255,255,0.1) !important;
   border-radius: 10px !important;
-  color: rgba(255,255,255,0.85) !important;
-  -webkit-text-fill-color: rgba(255,255,255,0.85) !important;
+  color: #09090e !important;
+  -webkit-text-fill-color: #09090e !important;
   font-family: 'JetBrains Mono', monospace !important;
   font-size: 13.5px !important; line-height: 1.65 !important;
   caret-color: #FF3621 !important;
@@ -221,18 +219,16 @@ button[data-testid="baseButton-primary"]:hover,
 }}
 [data-testid="stTextArea"] textarea::placeholder,
 .stTextArea textarea::placeholder {{
-  color: rgba(255,255,255,0.2) !important;
-  -webkit-text-fill-color: rgba(255,255,255,0.2) !important;
+  color: rgba(0,0,0,0.35) !important;
+  -webkit-text-fill-color: rgba(0,0,0,0.35) !important;
 }}
 [data-testid="stTextInput"] input,
 .stTextInput input,
 .stTextInput > div > div > input {{
-  background: rgba(255,255,255,0.04) !important;
-  background-color: rgba(255,255,255,0.04) !important;
   border: 1px solid rgba(255,255,255,0.1) !important;
   border-radius: 8px !important;
-  color: rgba(255,255,255,0.85) !important;
-  -webkit-text-fill-color: rgba(255,255,255,0.85) !important;
+  color: #09090e !important;
+  -webkit-text-fill-color: #09090e !important;
   caret-color: #FF3621 !important;
 }}
 [data-testid="stTextInput"] input:focus,
@@ -243,17 +239,8 @@ button[data-testid="baseButton-primary"]:hover,
 }}
 [data-testid="stTextInput"] input::placeholder,
 .stTextInput input::placeholder {{
-  color: rgba(255,255,255,0.2) !important;
-  -webkit-text-fill-color: rgba(255,255,255,0.2) !important;
-}}
-/* Fix browser autofill injecting white background */
-input:-webkit-autofill,
-input:-webkit-autofill:hover,
-input:-webkit-autofill:focus,
-input:-webkit-autofill:active {{
-  -webkit-box-shadow: 0 0 0 60px #09090e inset !important;
-  -webkit-text-fill-color: rgba(255,255,255,0.85) !important;
-  caret-color: #FF3621 !important;
+  color: rgba(0,0,0,0.35) !important;
+  -webkit-text-fill-color: rgba(0,0,0,0.35) !important;
 }}
 [data-testid="stWidgetLabel"] p,
 .stTextArea label, .stTextInput label {{
@@ -425,16 +412,12 @@ def inject_sidebar_killer() -> None:
           // Input overrides — injected directly into head so they beat emotion CSS
           var INPUT_CSS = [
             'textarea,input[type="text"],input[type="password"],input[type="email"],input[type="number"],input[type="search"]{',
-            'background:#0d0d14!important;background-color:#0d0d14!important;',
-            'color:rgba(255,255,255,0.85)!important;',
-            '-webkit-text-fill-color:rgba(255,255,255,0.85)!important;',
+            'color:#09090e!important;',
+            '-webkit-text-fill-color:#09090e!important;',
             'caret-color:#FF3621!important;}',
             'textarea::placeholder,input::placeholder{',
-            'color:rgba(255,255,255,0.25)!important;',
-            '-webkit-text-fill-color:rgba(255,255,255,0.25)!important;}',
-            'input:-webkit-autofill,input:-webkit-autofill:focus{',
-            '-webkit-box-shadow:0 0 0 60px #0d0d14 inset!important;',
-            '-webkit-text-fill-color:rgba(255,255,255,0.85)!important;}'
+            'color:rgba(0,0,0,0.35)!important;',
+            '-webkit-text-fill-color:rgba(0,0,0,0.35)!important;}'
           ].join('');
 
           // Inject persistent <style> into parent <head>
