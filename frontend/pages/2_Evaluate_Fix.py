@@ -4,156 +4,159 @@ import threading
 from typing import Optional, List, Tuple
 import httpx
 import streamlit as st
-import streamlit.components.v1 as st_components
 from datetime import datetime, timezone
+from frontend.styles import base_css, nav_html, nav_close
 
-st.set_page_config(page_title="Evaluate & Fix — PEF", page_icon="🔍", layout="wide")
+st.set_page_config(page_title="Evaluate & Fix — PEF", page_icon=None, layout="wide",
+                   initial_sidebar_state="collapsed")
 
 BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
 
-# ── Global styles ────────────────────────────────────────────────────────────
+st.markdown(base_css(), unsafe_allow_html=True)
+st.markdown(nav_html("evaluate"), unsafe_allow_html=True)
+
+# Page-specific styles
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+.page-header { margin-bottom: 24px; animation: fadeUp 0.5s 0.05s both; }
+.page-title  { font-size: 24px; font-weight: 700; color: #f1f5f9; letter-spacing: -0.025em; margin-bottom: 6px; }
+.page-sub    { font-size: 14px; color: rgba(255,255,255,0.35); line-height: 1.5; }
 
-html, body, .stApp, .stMarkdown, button, input, textarea, label {
-    font-family: 'Inter', sans-serif !important;
+/* Prompt input card */
+.prompt-card-header {
+  padding: 14px 20px; border-bottom: 1px solid rgba(255,255,255,0.06);
+  display: flex; align-items: center; gap: 8px;
 }
 
-.stApp { background-color: #f8fafc; color: #1e293b; }
-.main .block-container { padding-top: 1.5rem; max-width: 1100px; }
-#MainMenu, footer { visibility: hidden; }
-
-/* General text — overrides dark-mode theme inheritance */
-p, li, span, div, td, th, caption { color: #1e293b; }
-.stMarkdown p, .stMarkdown li, .stMarkdown span { color: #1e293b !important; }
-[data-testid="stMarkdownContainer"] p,
-[data-testid="stMarkdownContainer"] li { color: #1e293b !important; }
-
-/* Headings */
-h1 { color: #1e293b !important; font-weight: 700 !important; }
-h2, h3 { color: #334155 !important; font-weight: 600 !important; }
-
-/* Primary button — Databricks orange */
-.stButton > button[kind="primary"] {
-    background: #FF3621 !important;
-    border: none !important; border-radius: 8px !important;
-    color: white !important; font-weight: 600 !important;
-    letter-spacing: 0.01em !important; padding: 0.5rem 1.75rem !important;
-    box-shadow: 0 4px 12px rgba(255,54,33,0.35) !important;
-    transition: all 0.2s ease !important;
+/* Score overview */
+.overall-score-row {
+  padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.06);
+  display: flex; align-items: center; gap: 20px;
 }
-.stButton > button[kind="primary"]:hover {
-    background: #e02d1a !important;
-    transform: translateY(-1px) !important;
-    box-shadow: 0 6px 16px rgba(255,54,33,0.45) !important;
+.overall-num {
+  font-size: 48px; font-weight: 800; font-family: 'JetBrains Mono', monospace;
+  background: linear-gradient(135deg, #FF3621, #ff8a75);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 1;
+}
+.overall-denom { font-size: 20px; font-weight: 500; color: rgba(255,255,255,0.2); align-self: flex-end; margin-bottom: 6px; }
+.overall-label { font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.5); }
+.overall-sub   { font-size: 12px; color: rgba(255,255,255,0.25); margin-top: 2px; }
+
+.score-grid {
+  display: grid; grid-template-columns: repeat(4,1fr);
+  gap: 1px; background: rgba(255,255,255,0.05);
+}
+.score-cell {
+  background: rgba(9,9,14,0.6); padding: 16px 14px;
+  display: flex; flex-direction: column; gap: 8px;
+  cursor: pointer; transition: background 0.15s;
+}
+.score-cell:hover { background: rgba(255,255,255,0.03); }
+.score-cell-top { display: flex; align-items: baseline; justify-content: space-between; }
+.score-num-lg { font-size: 28px; font-weight: 800; font-family: 'JetBrains Mono', monospace; line-height: 1; }
+.score-denom  { font-size: 11px; color: rgba(255,255,255,0.25); }
+.score-dim-label { font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.35); letter-spacing: 0.04em; }
+.score-bar-track { height: 2px; background: rgba(255,255,255,0.08); border-radius: 1px; overflow: hidden; }
+.score-bar-fill  { height: 100%; border-radius: 1px; transition: width 1s cubic-bezier(0.25,0.46,0.45,0.94); }
+
+.sg { color: #4ade80 !important; }
+.sw { color: #fbbf24 !important; }
+.sb { color: #f87171 !important; }
+.bg { background: linear-gradient(90deg,#16a34a,#4ade80) !important; }
+.bw { background: linear-gradient(90deg,#d97706,#fbbf24) !important; }
+.bb { background: linear-gradient(90deg,#dc2626,#f87171) !important; }
+
+/* Dimension detail rows */
+.detail-row {
+  padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.05);
+  display: grid; grid-template-columns: 180px 1fr 1fr; gap: 16px; align-items: start;
+}
+.detail-row:last-child { border-bottom: none; }
+.detail-dim { display: flex; align-items: center; gap: 10px; }
+.detail-badge {
+  width: 36px; height: 36px; border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; font-weight: 800; font-family: 'JetBrains Mono', monospace; flex-shrink: 0;
+}
+.badge-g { background: rgba(22,163,74,0.15); color: #4ade80; }
+.badge-w { background: rgba(217,119,6,0.15);  color: #fbbf24; }
+.badge-b { background: rgba(220,38,38,0.15);  color: #f87171; }
+.detail-dim-name { font-size: 12.5px; font-weight: 600; color: rgba(255,255,255,0.7); line-height: 1.3; }
+.detail-col-label {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+  color: rgba(255,255,255,0.25); margin-bottom: 6px;
+}
+.detail-item { font-size: 12px; color: rgba(255,255,255,0.45); line-height: 1.5; display: flex; align-items: flex-start; gap: 6px; margin-bottom: 4px; }
+.detail-dot  { width: 4px; height: 4px; border-radius: 50%; margin-top: 6px; flex-shrink: 0; }
+
+/* Action cards */
+.action-row { display: flex; gap: 12px; margin-bottom: 20px; }
+.action-card {
+  flex: 1; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 14px; padding: 18px 20px; cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, transform 0.2s;
+}
+.action-card:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.14); transform: translateY(-2px); }
+.action-card.primary-action { border-color: rgba(255,54,33,0.3); background: rgba(255,54,33,0.07); }
+.action-card.primary-action:hover { background: rgba(255,54,33,0.12); border-color: rgba(255,54,33,0.45); }
+.action-icon {
+  width: 36px; height: 36px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center; margin-bottom: 12px;
+}
+.ai-red   { background: rgba(255,54,33,0.2); }
+.ai-indigo{ background: rgba(99,102,241,0.2); }
+.ai-teal  { background: rgba(20,184,166,0.15); }
+.action-title { font-size: 14px; font-weight: 700; color: #f1f5f9; margin-bottom: 4px; letter-spacing: -0.01em; }
+.action-desc  { font-size: 12px; color: rgba(255,255,255,0.35); line-height: 1.5; }
+
+/* Result tiles */
+.result-tile {
+  margin-top: 16px; background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 16px 20px;
+}
+.result-tile-header { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+.result-tile-title  { font-size: 15px; font-weight: 700; color: #f1f5f9; }
+.score-badge-pill {
+  font-weight: 700; font-size: 13px; padding: 3px 10px; border-radius: 20px;
 }
 
-/* Secondary button — dark/black */
-.stButton > button:not([kind="primary"]) {
-    border-radius: 8px !important; font-weight: 500 !important;
-    border: none !important;
-    background: #1e293b !important; color: white !important;
-    transition: background 0.2s !important;
+/* Comparison table */
+.compare-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 10px;
 }
-.stButton > button:not([kind="primary"]):hover { background: #334155 !important; }
-.stButton > button:not([kind="primary"]) *,
-.stButton > button:not([kind="primary"]) p {
-    color: white !important; -webkit-text-fill-color: white !important;
+.compare-title { font-size: 16px; font-weight: 700; color: #f1f5f9; }
+.compare-table {
+  background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 12px; padding: 6px 16px 2px;
 }
-
-/* Download button — dark/black */
-.stDownloadButton > button,
-[data-testid="stDownloadButton"] button {
-    border-radius: 8px !important; font-weight: 500 !important;
-    border: none !important; background: #1e293b !important;
-    color: white !important; -webkit-text-fill-color: white !important;
-    transition: background 0.2s !important;
+.compare-col-headers {
+  display: grid; grid-template-columns: 2fr 1fr 1fr 0.7fr; gap: 8px;
+  padding-bottom: 6px; border-bottom: 1px solid rgba(255,255,255,0.08);
 }
-.stDownloadButton > button:hover,
-[data-testid="stDownloadButton"] button:hover { background: #334155 !important; }
-.stDownloadButton > button *,
-.stDownloadButton > button p,
-[data-testid="stDownloadButton"] button *,
-[data-testid="stDownloadButton"] button p {
-    color: white !important; -webkit-text-fill-color: white !important;
+.compare-col-hdr { font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.25); text-transform: uppercase; letter-spacing: 0.05em; text-align: center; }
+.compare-col-hdr:first-child { text-align: left; }
+.compare-row {
+  display: grid; grid-template-columns: 2fr 1fr 1fr 0.7fr; gap: 8px;
+  align-items: center; padding: 7px 0; border-bottom: 1px solid rgba(255,255,255,0.04);
 }
-
-/* Text area */
-.stTextArea textarea {
-    border-radius: 10px !important; border: 1.5px solid #e2e8f0 !important;
-    font-family: 'Inter', monospace !important; font-size: 14px !important;
-    background: white !important; color: #1e293b !important;
-    -webkit-text-fill-color: #1e293b !important;
-    line-height: 1.6 !important; transition: border-color 0.2s !important;
+.compare-row:last-child { border-bottom: none; }
+.compare-dim  { font-size: 13px; color: rgba(255,255,255,0.6); font-weight: 500; }
+.score-mini   {
+  border-radius: 6px; text-align: center; padding: 3px 6px;
 }
-.stTextArea textarea:focus {
-    border-color: #FF3621 !important;
-    box-shadow: 0 0 0 3px rgba(255,54,33,0.12) !important;
-}
-.stTextArea textarea::placeholder { color: #94a3b8 !important; -webkit-text-fill-color: #94a3b8 !important; }
+.delta-cell   { text-align: center; font-size: 13px; font-weight: 700; }
 
-/* Labels */
-.stTextArea label, .stTextInput label, .stRadio label,
-[data-testid="stWidgetLabel"] { color: #334155 !important; }
-
-/* Radio */
-.stRadio > label { font-weight: 600 !important; color: #334155 !important; }
-.stRadio [data-testid="stMarkdownContainer"] p { color: #334155 !important; }
-
-/* Expander */
-details { border-radius: 10px !important; border: 1.5px solid #e2e8f0 !important; background: white !important; margin-bottom: 6px !important; }
-details * { color: #1e293b !important; }
-summary { font-weight: 500 !important; padding: 0.6rem 1rem !important; color: #334155 !important; }
-
-/* Progress bar */
-.stProgress > div > div > div > div {
-    background: linear-gradient(90deg, #FF3621, #ff6b52) !important;
-    border-radius: 10px !important;
-}
-
-/* Tabs */
-.stTabs [data-baseweb="tab"] { font-weight: 500 !important; font-size: 0.9rem !important; }
-.stTabs [data-baseweb="tab-highlight"] { background-color: #FF3621 !important; }
-.stTabs [aria-selected="true"] { color: #FF3621 !important; }
-
-/* Alerts */
-.stAlert { border-radius: 10px !important; }
-
-/* Divider */
-hr { border-color: #e2e8f0 !important; margin: 1.25rem 0 !important; }
-
-/* Spinner */
-.stSpinner > div { border-top-color: #FF3621 !important; }
-
-/* ── Sidebar ─────────────────────────────────────────────────────────── */
-[data-testid="stSidebar"] {
-    background-color: #ffffff !important;
-    border-right: 1.5px solid #e2e8f0 !important;
-}
-[data-testid="stSidebar"] * { color: #334155 !important; }
-[data-testid="stSidebar"]::before {
-    content: "PEF";
-    display: block;
-    background: linear-gradient(135deg, #FF3621 0%, #cc2c1a 100%);
-    color: white !important;
-    font-family: 'Inter', sans-serif;
-    font-weight: 700; font-size: 1rem; letter-spacing: 0.1em;
-    padding: 1rem 1.25rem 0.85rem; margin-bottom: 0.25rem;
-}
-[data-testid="stSidebarNav"] { padding: 0.5rem 0 !important; }
-[data-testid="stSidebarNavLink"] {
-    border-radius: 8px !important; margin: 2px 8px !important;
-    padding: 0.55rem 0.9rem !important; color: #475569 !important;
-    font-weight: 500 !important; font-size: 0.88rem !important;
-    transition: background 0.15s, color 0.15s !important;
-}
-[data-testid="stSidebarNavLink"]:hover { background: #fff5f3 !important; color: #FF3621 !important; }
-[data-testid="stSidebarNavLink"][aria-current="page"] {
-    background: #fff5f3 !important; color: #FF3621 !important;
-    font-weight: 600 !important; border-left: 3px solid #FF3621 !important;
-}
+/* Fix section */
+.fix-section-title { font-size: 18px; font-weight: 700; color: #f1f5f9; margin-bottom: 14px; }
 </style>
+""", unsafe_allow_html=True)
+
+st.markdown("""
+<div class="page-header">
+  <div class="page-title">Evaluate &amp; Fix</div>
+  <div class="page-sub">Score any LLM prompt across 8 quality dimensions · Auto-fix · Stress test · Hallucination check</div>
+</div>
 """, unsafe_allow_html=True)
 
 
@@ -326,122 +329,168 @@ def score_emoji(score: int) -> str:
 
 
 def render_score_overview(dimensions: list):
-    """Compact score card grid — one card per dimension."""
-    cols = st.columns(len(dimensions))
-    for col, dim in zip(cols, dimensions):
-        score = dim["score"]
-        tc, bg, border = score_color(score)
+    """8-cell grid: large mono score + colour bar per dimension."""
+    def _classes(score: int):
+        if score >= 7: return "sg", "bg"
+        if score >= 4: return "sw", "bw"
+        return "sb", "bb"
+
+    cells = ""
+    for dim in dimensions:
+        s = dim["score"]
+        nc, bc = _classes(s)
         short = dim["name"].split(" & ")[0].split(" / ")[0]
-        col.markdown(f"""
-        <div style="background:{bg};border:1.5px solid {border};border-radius:14px;
-                    padding:18px 10px;text-align:center;">
-            <div style="font-size:30px;font-weight:700;color:{tc}!important;line-height:1;">{score}</div>
-            <div style="font-size:10px;color:#94a3b8!important;font-weight:600;
-                        text-transform:uppercase;letter-spacing:0.05em;margin-top:6px;">/10</div>
-            <div style="font-size:12px;color:#475569!important;font-weight:500;
-                        margin-top:8px;line-height:1.3;">{short}</div>
-        </div>
-        """, unsafe_allow_html=True)
+        pct = s * 10
+        cells += f"""
+<div class="score-cell">
+  <div class="score-cell-top">
+    <span class="score-num-lg {nc}">{s}</span>
+    <span class="score-denom">/10</span>
+  </div>
+  <div class="score-dim-label">{short.upper()}</div>
+  <div class="score-bar-track"><div class="score-bar-fill {bc}" style="width:{pct}%"></div></div>
+</div>"""
+
+    avg = sum(d["score"] for d in dimensions) / len(dimensions) if dimensions else 0
+    avg_cls = "sg" if avg >= 7 else ("sw" if avg >= 4 else "sb")
+    issues = sum(1 for d in dimensions if d["score"] < 7)
+    issue_txt = f"{issues} need{'s' if issues == 1 else ''} attention" if issues else "all passing"
+
+    st.markdown(f"""
+<div class="glass-card" style="animation:fadeUp 0.5s 0.1s both;">
+  <div class="overall-score-row">
+    <div>
+      <div style="display:flex;align-items:baseline;gap:4px;">
+        <span class="overall-num">{avg:.1f}</span>
+        <span class="overall-denom">/10</span>
+      </div>
+      <div class="overall-label">Overall Score</div>
+      <div class="overall-sub">8 dimensions evaluated · {issue_txt}</div>
+    </div>
+  </div>
+  <div class="score-grid">{cells}</div>
+</div>
+""", unsafe_allow_html=True)
 
 
 def render_scorecard_details(dimensions: list):
-    """Expandable detail rows per dimension with progress bar and G-Eval reasoning."""
-    st.markdown("<div style='height:12px'></div>", unsafe_allow_html=True)
+    """Detail rows with badge + issues/suggestions columns, then Streamlit expander for full reasoning."""
+    st.markdown("<div class='glass-card' style='animation:fadeUp 0.5s 0.15s both;'>", unsafe_allow_html=True)
+    st.markdown("""
+<div class="glass-card-header">
+  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+    <path d="M2 4h10M2 7h6M2 10h8" stroke="rgba(255,255,255,0.35)" stroke-width="1.4" stroke-linecap="round"/>
+  </svg>
+  <span class="card-label">Dimension Analysis</span>
+  <span style="margin-left:auto;font-size:11px;color:rgba(255,255,255,0.2);">Expand any row for full reasoning</span>
+</div>""", unsafe_allow_html=True)
+
     for dim in dimensions:
         score = dim["score"]
-        emoji = score_emoji(score)
-        with st.expander(f"{emoji} **{dim['name']}** — {score}/10"):
-            st.progress(score / 10)
-            if dim.get("reasoning"):
-                st.markdown(f"**🧠 Analysis**\n\n{dim['reasoning']}")
-                st.markdown("---")
-            c1, c2 = st.columns(2)
-            with c1:
-                if dim["issues"]:
-                    st.markdown("**⚠️ Issues found**")
-                    for issue in dim["issues"]:
-                        st.markdown(f"- {issue}")
-                elif score < 7:
-                    if score < 4:
-                        st.markdown("**🔴 Critical — needs significant improvement**")
-                    else:
-                        st.markdown("**⚠️ Below target — review analysis above**")
-                else:
-                    st.markdown("**✅ No issues found**")
-            with c2:
-                if dim["suggestions"]:
-                    st.markdown("**💡 Suggestions**")
-                    for s in dim["suggestions"]:
-                        st.markdown(f"- {s}")
-                elif score < 7:
-                    st.markdown("**💡 See analysis above for improvement guidance**")
-                else:
-                    st.markdown("**✅ Looks good**")
+        if score >= 7:
+            badge_cls, dot_col = "badge-g", "#4ade80"
+            row_bg = ""
+        elif score >= 4:
+            badge_cls, dot_col = "badge-w", "#fbbf24"
+            row_bg = "background:rgba(217,119,6,0.04);"
+        else:
+            badge_cls, dot_col = "badge-b", "#f87171"
+            row_bg = "background:rgba(220,38,38,0.04);"
+
+        issues_html = "".join(
+            f'<div class="detail-item"><div class="detail-dot" style="background:{dot_col}"></div>{i}</div>'
+            for i in dim["issues"]
+        ) or f'<div class="detail-item" style="color:rgba(74,222,128,0.5);">No critical issues</div>'
+
+        suggs_html = "".join(
+            f'<div class="detail-item"><div class="detail-dot" style="background:#4ade80"></div>{s}</div>'
+            for s in dim["suggestions"]
+        ) or '<div class="detail-item" style="color:rgba(255,255,255,0.25);">See reasoning below</div>'
+
+        st.markdown(f"""
+<div class="detail-row" style="{row_bg}">
+  <div class="detail-dim">
+    <div class="detail-badge {badge_cls}">{score}</div>
+    <div class="detail-dim-name">{dim['name']}</div>
+  </div>
+  <div>
+    <div class="detail-col-label">Issues</div>
+    {issues_html}
+  </div>
+  <div>
+    <div class="detail-col-label">Suggestions</div>
+    {suggs_html}
+  </div>
+</div>""", unsafe_allow_html=True)
+
+        if dim.get("reasoning"):
+            with st.expander(f"Full reasoning — {dim['name']}"):
+                st.progress(score / 10)
+                st.markdown(dim["reasoning"])
+
+    st.markdown("</div>", unsafe_allow_html=True)
 
 
 def render_comparison(original_eval: dict, fixed_eval: dict):
-    """Before/after scorecard comparison table."""
+    """Before/after score comparison table in Glass Premium style."""
     orig_dims = {d["name"]: d["score"] for d in original_eval.get("dimensions", [])}
     fix_dims  = {d["name"]: d["score"] for d in fixed_eval.get("dimensions", [])}
+    orig_avg  = sum(orig_dims.values()) / len(orig_dims) if orig_dims else 0
+    fix_avg   = sum(fix_dims.values())  / len(fix_dims)  if fix_dims  else 0
+    total_d   = fix_avg - orig_avg
 
-    orig_avg = sum(orig_dims.values()) / len(orig_dims) if orig_dims else 0
-    fix_avg  = sum(fix_dims.values())  / len(fix_dims)  if fix_dims  else 0
-    total_d  = fix_avg - orig_avg
-
-    td_color = "#16a34a" if total_d > 0 else ("#dc2626" if total_d < 0 else "#64748b")
-    td_bg    = "#f0fdf4" if total_d > 0 else ("#fef2f2" if total_d < 0 else "#f1f5f9")
+    td_color = "#4ade80" if total_d > 0 else ("#f87171" if total_d < 0 else "#64748b")
+    td_bg    = "rgba(22,163,74,0.12)" if total_d > 0 else ("rgba(220,38,38,0.12)" if total_d < 0 else "rgba(100,116,139,0.12)")
     td_sign  = "+" if total_d > 0 else ""
     td_arrow = "↑" if total_d > 0 else ("↓" if total_d < 0 else "→")
+
+    def _mini(score: int) -> str:
+        tc, bg = ("#4ade80", "rgba(22,163,74,0.12)") if score >= 7 else \
+                 (("#fbbf24", "rgba(217,119,6,0.12)") if score >= 4 else ("#f87171", "rgba(220,38,38,0.12)"))
+        return (f'<div class="score-mini" style="background:{bg};border:1px solid {tc}22;">'
+                f'<span style="font-size:15px;font-weight:800;font-family:JetBrains Mono,monospace;color:{tc};">{score}</span>'
+                f'<span style="font-size:11px;color:rgba(255,255,255,0.25);">/10</span></div>')
 
     rows = ""
     for name in orig_dims:
         o = orig_dims.get(name, 0)
         f = fix_dims.get(name, o)
         d = f - o
-        o_tc, o_bg, o_brd = score_color(o)
-        f_tc, f_bg, f_brd = score_color(f)
-        dc     = "#16a34a" if d > 0 else ("#dc2626" if d < 0 else "#94a3b8")
-        dsign  = "+" if d > 0 else ""
-        darrow = "↑" if d > 0 else ("↓" if d < 0 else "—")
-        rows += (
-            f'<div style="display:grid;grid-template-columns:2fr 1fr 1fr 0.7fr;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid #f1f5f9;">'
-            f'<span style="font-size:13px;color:#334155!important;font-weight:500;">{name}</span>'
-            f'<div style="background:{o_bg};border:1px solid {o_brd};border-radius:6px;text-align:center;padding:3px 6px;">'
-            f'<span style="font-size:15px;font-weight:700;color:{o_tc}!important;">{o}</span>'
-            f'<span style="font-size:11px;color:#94a3b8!important;">/10</span></div>'
-            f'<div style="background:{f_bg};border:1px solid {f_brd};border-radius:6px;text-align:center;padding:3px 6px;">'
-            f'<span style="font-size:15px;font-weight:700;color:{f_tc}!important;">{f}</span>'
-            f'<span style="font-size:11px;color:#94a3b8!important;">/10</span></div>'
-            f'<div style="text-align:center;"><span style="font-size:13px;font-weight:700;color:{dc}!important;">{darrow} {dsign}{d}</span></div>'
-            f'</div>'
-        )
+        dc = "#4ade80" if d > 0 else ("#f87171" if d < 0 else "rgba(255,255,255,0.25)")
+        ds = "+" if d > 0 else ""
+        da = "↑" if d > 0 else ("↓" if d < 0 else "—")
+        rows += f"""
+<div class="compare-row">
+  <span class="compare-dim">{name}</span>
+  {_mini(o)}
+  {_mini(f)}
+  <div class="delta-cell" style="color:{dc};">{da} {ds}{d}</div>
+</div>"""
 
     st.markdown(f"""
-    <div style="margin-top:20px;">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-        <span style="font-size:16px;font-weight:700;color:#1e293b!important;">📈 Score Comparison</span>
-        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-          <span style="font-size:13px;color:#64748b!important;">Before: <strong style="color:#1e293b!important;">{orig_avg:.1f}/10</strong></span>
-          <span style="color:#cbd5e1!important;font-size:16px;">→</span>
-          <span style="font-size:13px;color:#64748b!important;">After: <strong style="color:#1e293b!important;">{fix_avg:.1f}/10</strong></span>
-          <span style="background:{td_bg};color:{td_color}!important;font-weight:700;
-                       font-size:13px;padding:3px 12px;border-radius:20px;">
-            {td_arrow} {td_sign}{total_d:.1f}
-          </span>
-        </div>
-      </div>
-      <div style="background:white;border:1.5px solid #e2e8f0;border-radius:12px;padding:6px 16px 2px;">
-        <div style="display:grid;grid-template-columns:2fr 1fr 1fr 0.7fr;gap:8px;
-                    padding-bottom:6px;border-bottom:1.5px solid #e2e8f0;">
-          <span style="font-size:11px;font-weight:600;color:#94a3b8!important;text-transform:uppercase;letter-spacing:0.05em;">Dimension</span>
-          <span style="font-size:11px;font-weight:600;color:#94a3b8!important;text-transform:uppercase;letter-spacing:0.05em;text-align:center;">Before</span>
-          <span style="font-size:11px;font-weight:600;color:#94a3b8!important;text-transform:uppercase;letter-spacing:0.05em;text-align:center;">After</span>
-          <span style="font-size:11px;font-weight:600;color:#94a3b8!important;text-transform:uppercase;letter-spacing:0.05em;text-align:center;">Δ</span>
-        </div>
-        {rows}
-      </div>
+<div style="margin-top:20px;">
+  <div class="compare-header">
+    <span class="compare-title">Score Comparison</span>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <span style="font-size:13px;color:rgba(255,255,255,0.4);">Before: <strong style="color:#f1f5f9;">{orig_avg:.1f}/10</strong></span>
+      <span style="color:rgba(255,255,255,0.2);font-size:16px;">→</span>
+      <span style="font-size:13px;color:rgba(255,255,255,0.4);">After: <strong style="color:#f1f5f9;">{fix_avg:.1f}/10</strong></span>
+      <span style="background:{td_bg};color:{td_color};font-weight:700;font-size:13px;padding:3px 12px;border-radius:20px;">
+        {td_arrow} {td_sign}{total_d:.1f}
+      </span>
     </div>
-    """, unsafe_allow_html=True)
+  </div>
+  <div class="compare-table">
+    <div class="compare-col-headers">
+      <span class="compare-col-hdr" style="text-align:left;">Dimension</span>
+      <span class="compare-col-hdr">Before</span>
+      <span class="compare-col-hdr">After</span>
+      <span class="compare-col-hdr">Delta</span>
+    </div>
+    {rows}
+  </div>
+</div>
+""", unsafe_allow_html=True)
 
 
 def build_scorecard_report(
@@ -511,55 +560,6 @@ def build_scorecard_report(
 
     return "\n".join(lines)
 
-
-# ── Page header ───────────────────────────────────────────────────────────────
-st.markdown("""
-<div style="background:linear-gradient(135deg,#FF3621 0%,#cc2c1a 100%);
-            border-radius:16px;padding:28px 32px;margin-bottom:24px;
-            box-shadow:0 8px 24px rgba(255,54,33,0.25);">
-  <h1 style="color:white!important;margin:0;font-size:1.75rem;">🔍 Evaluate & Fix</h1>
-  <p style="color:rgba(255,255,255,0.85);margin:8px 0 0;font-size:15px;">
-    Paste any LLM prompt to get a scored evaluation across 8 quality dimensions powered by DeepEval,
-    then generate an improved version, stress test it, or check hallucination risk.
-  </p>
-</div>
-""", unsafe_allow_html=True)
-
-
-# Inject scroll-to-top button into the host Streamlit page via component iframe
-st_components.html("""
-<script>
-(function() {
-    var p = window.parent.document;
-    if (p.getElementById('pef-scroll-top')) return;
-    var s = p.createElement('style');
-    s.textContent = '#pef-scroll-top{position:fixed;bottom:1.5rem;right:1.5rem;z-index:2147483647;'
-        + 'background:linear-gradient(135deg,#FF3621,#cc2c1a);color:#fff;border:none;'
-        + 'border-radius:50%;width:42px;height:42px;font-size:20px;cursor:pointer;'
-        + 'box-shadow:0 4px 14px rgba(255,54,33,.45);display:flex;align-items:center;'
-        + 'justify-content:center;transition:opacity .2s;line-height:1}'
-        + '#pef-scroll-top:hover{opacity:.8}';
-    p.head.appendChild(s);
-    var btn = p.createElement('button');
-    btn.id = 'pef-scroll-top';
-    btn.title = 'Back to top';
-    btn.textContent = '↑';
-    btn.onclick = function() {
-        var sels = ['[data-testid="stMain"]', '.main', 'section.main',
-                    '[data-testid="block-container"]', '.block-container'];
-        for (var i = 0; i < sels.length; i++) {
-            var el = p.querySelector(sels[i]);
-            if (el && el.scrollHeight > el.clientHeight) {
-                el.scrollTo({top: 0, behavior: 'smooth'});
-                return;
-            }
-        }
-        window.parent.scrollTo({top: 0, behavior: 'smooth'});
-    };
-    p.body.appendChild(btn);
-})();
-</script>
-""", height=0, scrolling=False)
 
 # ── Session state ─────────────────────────────────────────────────────────────
 for key, default in [
@@ -634,12 +634,13 @@ if st.session_state.eval_running:
 
 # ── Prompt input ──────────────────────────────────────────────────────────────
 st.markdown("""
-<div style="background:white;border-radius:14px;padding:20px 24px;
-            border:1.5px solid #e2e8f0;box-shadow:0 1px 4px rgba(0,0,0,0.05);
-            margin-bottom:16px;">
-  <div style="font-size:13px;font-weight:600;color:#FF3621;
-              text-transform:uppercase;letter-spacing:0.06em;margin-bottom:10px;">
-    Your Prompt
+<div class="glass-card" style="animation:fadeUp 0.5s 0.1s both;">
+  <div class="prompt-card-header">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+      <rect x="2" y="2" width="10" height="10" rx="2" stroke="rgba(255,255,255,0.4)" stroke-width="1.3"/>
+      <path d="M4.5 5h5M4.5 7.5h3" stroke="rgba(255,255,255,0.4)" stroke-width="1.3" stroke-linecap="round"/>
+    </svg>
+    <span class="card-label-accent">Your Prompt</span>
   </div>
 """, unsafe_allow_html=True)
 
@@ -719,23 +720,6 @@ if evaluate_clicked and not st.session_state.eval_running:
 if st.session_state.evaluation:
     dims = st.session_state.evaluation.get("dimensions", [])
     avg_score = sum(d["score"] for d in dims) / len(dims) if dims else 0
-    tc_avg, bg_avg, border_avg = score_color(round(avg_score))
-
-    st.markdown("<hr>", unsafe_allow_html=True)
-    st.markdown(f"""
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
-      <div>
-        <span style="font-size:18px;font-weight:700;color:#1e293b!important;">📊 Evaluation Scorecard</span>
-        <span style="font-size:13px;color:#94a3b8!important;margin-left:10px;">8 dimensions rated 1–10</span>
-      </div>
-      <div style="background:{bg_avg};border:1.5px solid {border_avg};border-radius:10px;
-                  padding:6px 16px;text-align:center;">
-        <span style="font-size:13px;color:#64748b!important;font-weight:500;">Overall </span>
-        <span style="font-size:18px;font-weight:700;color:{tc_avg}!important;">{avg_score:.1f}</span>
-        <span style="font-size:13px;color:#94a3b8!important;">/10</span>
-      </div>
-    </div>
-    """, unsafe_allow_html=True)
 
     render_score_overview(dims)
     render_scorecard_details(dims)
@@ -804,20 +788,24 @@ if st.session_state.evaluation:
     if st.session_state.stress_test_result:
         sr = st.session_state.stress_test_result
         v_score = sr["vulnerability_score"]
-        v_tc, v_bg, v_brd = score_color(v_score)
+        v_tc = "#4ade80" if v_score >= 7 else ("#fbbf24" if v_score >= 4 else "#f87171")
+        v_bg = "rgba(22,163,74,0.12)" if v_score >= 7 else ("rgba(217,119,6,0.12)" if v_score >= 4 else "rgba(220,38,38,0.12)")
         st.markdown(f"""
-<div style="margin-top:16px;background:white;border:1.5px solid #e2e8f0;
-            border-radius:14px;padding:16px 20px;">
-  <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
-    <span style="font-size:15px;font-weight:700;color:#1e293b!important;">🔴 Stress Test Results</span>
-    <span style="background:{v_bg};border:1px solid {v_brd};color:{v_tc}!important;
-                 font-weight:700;font-size:13px;padding:3px 10px;border-radius:20px;">
+<div class="result-tile">
+  <div class="result-tile-header">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+      <path d="M8 2L14 6v5L8 14 2 11V6L8 2z" stroke="{v_tc}" stroke-width="1.5" stroke-linejoin="round"/>
+      <path d="M8 7v2.5l1.5 1" stroke="{v_tc}" stroke-width="1.4" stroke-linecap="round"/>
+    </svg>
+    <span class="result-tile-title">Stress Test Results</span>
+    <span class="score-badge-pill" style="background:{v_bg};color:{v_tc};border:1px solid {v_tc}33;">
       Robustness {v_score}/10
     </span>
   </div>
 """, unsafe_allow_html=True)
         for attack in sr["attacks"]:
-            label = "⚠️ Broke intent" if attack["verdict"] == "PASS" else "✅ Intent preserved"
+            label = "Broke intent" if attack["verdict"] == "PASS" else "Intent preserved"
+            icon_col = "#f87171" if attack["verdict"] == "PASS" else "#4ade80"
             with st.expander(f"`{attack['attack_type']}` — {label}"):
                 st.markdown(f"**Attack input:** {attack['input']}")
                 st.markdown(f"**Reason:** {attack['reason']}")
@@ -825,21 +813,24 @@ if st.session_state.evaluation:
 
     if st.session_state.hallucination_result:
         hr = st.session_state.hallucination_result
-        h_tc, h_bg, h_brd = score_color(hr["hallucination_score"])
+        h_tc = "#4ade80" if hr["hallucination_score"] >= 7 else ("#fbbf24" if hr["hallucination_score"] >= 4 else "#f87171")
+        h_bg = "rgba(22,163,74,0.12)" if hr["hallucination_score"] >= 7 else ("rgba(217,119,6,0.12)" if hr["hallucination_score"] >= 4 else "rgba(220,38,38,0.12)")
         st.markdown(f"""
-<div style="margin-top:16px;background:white;border:1.5px solid #e2e8f0;
-            border-radius:14px;padding:16px 20px;">
-  <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
-    <span style="font-size:15px;font-weight:700;color:#1e293b!important;">🧠 Hallucination Risk</span>
-    <span style="background:{h_bg};border:1px solid {h_brd};color:{h_tc}!important;
-                 font-weight:700;font-size:13px;padding:3px 10px;border-radius:20px;">
+<div class="result-tile">
+  <div class="result-tile-header">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+      <path d="M8 3l5 8.66H3L8 3z" stroke="{h_tc}" stroke-width="1.5" stroke-linejoin="round"/>
+      <path d="M8 8v2M8 11.5v.5" stroke="{h_tc}" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>
+    <span class="result-tile-title">Hallucination Risk</span>
+    <span class="score-badge-pill" style="background:{h_bg};color:{h_tc};border:1px solid {h_tc}33;">
       {hr['verdict']} ({hr['hallucination_score']}/10)
     </span>
   </div>
-  <p style="color:#64748b!important;font-size:13px;margin:4px 0 10px;">{hr['reason']}</p>
+  <p style="color:rgba(255,255,255,0.4);font-size:13px;margin:4px 0 10px;">{hr['reason']}</p>
 </div>
 """, unsafe_allow_html=True)
-        with st.expander("📄 View sample output used for analysis"):
+        with st.expander("View sample output used for analysis"):
             st.text(hr["sample_output"])
 
     # ── Download report (after all analysis tiles) ────────────────────────────
@@ -862,12 +853,8 @@ if st.session_state.evaluation:
         )
 
     # ── Fix section ───────────────────────────────────────────────────────────
-    st.markdown("<hr>", unsafe_allow_html=True)
-    st.markdown("""
-    <div style="font-size:18px;font-weight:700;color:#1e293b;margin-bottom:14px;">
-      🔧 Fix Your Prompt
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown("<hr style='border-color:rgba(255,255,255,0.07);margin:24px 0;'>", unsafe_allow_html=True)
+    st.markdown('<div class="fix-section-title">Fix Your Prompt</div>', unsafe_allow_html=True)
 
     fix_mode = st.radio(
         "fix_mode_radio",
@@ -910,12 +897,8 @@ if st.session_state.evaluation:
     # ── Improved Prompt ───────────────────────────────────────────────────────
     if st.session_state.fix_result:
         fix_result = st.session_state.fix_result
-        st.markdown("<hr>", unsafe_allow_html=True)
-        st.markdown("""
-        <div style="font-size:18px;font-weight:700;color:#1e293b;margin-bottom:14px;">
-          ✨ Improved Prompt
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown("<hr style='border-color:rgba(255,255,255,0.07);margin:24px 0;'>", unsafe_allow_html=True)
+        st.markdown('<div class="fix-section-title">Improved Prompt</div>', unsafe_allow_html=True)
 
         eval_improvement: bool = False
         if fix_result.get("fixed_prompt"):
@@ -1145,3 +1128,5 @@ if st.session_state.evaluation:
                                     st.error(f"Error {e.response.status_code}: {detail}")
                                 except Exception as e:
                                     st.error(f"Unexpected error: {e}")
+
+st.markdown(nav_close(), unsafe_allow_html=True)
