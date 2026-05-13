@@ -371,3 +371,28 @@ def nav_html(active: str) -> str:
 
 def nav_close() -> str:
     return ""
+
+
+def inject_sidebar_killer() -> None:
+    """Inject sidebar-hiding CSS into <head> immediately via component iframe script.
+    This runs before st.markdown CSS loads, preventing the sidebar flash on navigation."""
+    import streamlit.components.v1 as components
+    components.html(
+        """
+        <script>
+        (function() {
+          var css = [
+            '[data-testid="stSidebar"]{display:none!important;width:0!important;min-width:0!important;overflow:hidden!important;transition:none!important;}',
+            'section[data-testid="stSidebar"]{display:none!important;width:0!important;}',
+            '[data-testid="collapsedControl"]{display:none!important;}',
+            '[data-testid="stSidebarCollapsedControl"]{display:none!important;}'
+          ].join('');
+          var s = document.createElement('style');
+          s.textContent = css;
+          parent.document.head.appendChild(s);
+        })();
+        </script>
+        """,
+        height=0,
+        scrolling=False,
+    )

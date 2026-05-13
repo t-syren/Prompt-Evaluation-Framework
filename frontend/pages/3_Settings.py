@@ -2,13 +2,14 @@ import os
 from typing import Optional
 import httpx
 import streamlit as st
-from frontend.styles import base_css, nav_html, nav_close
+from frontend.styles import base_css, nav_html, nav_close, inject_sidebar_killer
 
 st.set_page_config(page_title="Settings — PEF", page_icon=None, layout="wide",
                    initial_sidebar_state="collapsed")
 
 BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
 
+inject_sidebar_killer()
 st.markdown(base_css(), unsafe_allow_html=True)
 st.markdown(nav_html("settings"), unsafe_allow_html=True)
 

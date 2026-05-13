@@ -1,9 +1,10 @@
 import streamlit as st
-from frontend.styles import base_css, nav_html, nav_close
+from frontend.styles import base_css, nav_html, nav_close, inject_sidebar_killer
 
 st.set_page_config(page_title="Get Started — PEF", page_icon=None, layout="wide",
                    initial_sidebar_state="collapsed")
 
+inject_sidebar_killer()
 st.markdown(base_css(), unsafe_allow_html=True)
 st.markdown(nav_html("get_started"), unsafe_allow_html=True)
 
