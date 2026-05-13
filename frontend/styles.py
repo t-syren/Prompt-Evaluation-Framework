@@ -202,6 +202,17 @@ html, body, .stApp {{
 .stRadio > label {{ color: rgba(255,255,255,0.5) !important; }}
 .stRadio [data-testid="stMarkdownContainer"] p {{ color: rgba(255,255,255,0.75) !important; }}
 
+/* Streamlit toggle */
+[data-testid="stToggle"] > label > div[data-checked="true"] {{
+  background-color: #FF3621 !important;
+}}
+[data-testid="stToggle"] > label > div {{
+  background-color: rgba(255,255,255,0.15) !important;
+}}
+[data-testid="stToggle"] > p {{
+  color: rgba(255,255,255,0.7) !important;
+}}
+
 /* ── TABS ── */
 .stTabs [data-baseweb="tab"] {{ color: rgba(255,255,255,0.45) !important; font-weight: 500 !important; }}
 .stTabs [data-baseweb="tab-highlight"] {{ background-color: #FF3621 !important; }}
