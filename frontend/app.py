@@ -3,7 +3,7 @@ from frontend.styles import base_css, nav_html, nav_close
 
 st.set_page_config(
     page_title="Prompt Evaluation Framework",
-    page_icon="🔍",
+    page_icon=None,
     layout="wide",
     initial_sidebar_state="collapsed",
 )
@@ -30,6 +30,7 @@ st.markdown("""
     linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
   background-size: 48px 48px;
   mask-image: radial-gradient(ellipse 70% 70% at 50% 50%, black 0%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse 70% 70% at 50% 50%, black 0%, transparent 100%);
   pointer-events: none;
 }
 .hero-glow-1 {
