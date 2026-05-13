@@ -18,29 +18,47 @@ html, body, .stApp {{
   color: #e2e8f0 !important;
 }}
 
-/* ── Sidebar: hide completely ── */
+/* ── Hide ALL Streamlit chrome ── */
 [data-testid="stSidebar"] {{ display: none !important; }}
 [data-testid="collapsedControl"] {{ display: none !important; }}
+[data-testid="stSidebarCollapsedControl"] {{ display: none !important; }}
+[data-testid="stHeader"] {{ display: none !important; }}
+[data-testid="stToolbar"] {{ display: none !important; }}
+[data-testid="stDecoration"] {{ display: none !important; }}
+[data-testid="stStatusWidget"] {{ display: none !important; }}
+#MainMenu {{ display: none !important; }}
+footer {{ display: none !important; }}
+header {{ display: none !important; }}
 
 /* ── Remove Streamlit default padding ── */
-.main .block-container {{
+.main .block-container,
+.stMainBlockContainer,
+div.block-container,
+[data-testid="stMainBlockContainer"] {{
   padding-top: 0 !important;
-  padding-left: 28px !important;
-  padding-right: 28px !important;
+  margin-top: 0 !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
   max-width: 100% !important;
 }}
-#MainMenu, footer, header {{ visibility: hidden !important; }}
+.main, section[data-testid="stMain"] {{
+  padding-top: 0 !important;
+  margin-top: 0 !important;
+}}
+[data-testid="stAppViewContainer"] {{
+  padding-top: 0 !important;
+}}
 
-/* ── TOP NAV ── */
+/* ── TOP NAV — fixed to viewport top, above everything ── */
 .topnav {{
-  position: sticky; top: 0; z-index: 999;
+  position: fixed; top: 0; left: 0; right: 0;
+  z-index: 999999;
   height: 52px;
-  background: rgba(9,9,14,0.82);
+  background: rgba(9,9,14,0.92);
   backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
   border-bottom: 1px solid rgba(255,255,255,0.07);
   display: flex; align-items: center;
   padding: 0 28px;
-  margin: 0 -28px;
 }}
 .nav-logo {{
   display: flex; align-items: center; gap: 9px;
@@ -81,13 +99,13 @@ html, body, .stApp {{
 
 /* ── PAGE BACKGROUND ── */
 .page-bg {{
-  min-height: calc(100vh - 52px);
+  min-height: 100vh;
   background:
     radial-gradient(ellipse 60% 40% at 15% 0%, rgba(255,54,33,0.13) 0%, transparent 60%),
     radial-gradient(ellipse 40% 30% at 85% 20%, rgba(99,102,241,0.10) 0%, transparent 60%),
     radial-gradient(ellipse 50% 40% at 60% 90%, rgba(6,182,212,0.07) 0%, transparent 60%),
     #09090e;
-  padding: 32px 0 80px;
+  padding: 52px 28px 80px;
 }}
 
 /* ── GLASS CARD ── */
