@@ -352,7 +352,6 @@ def render_score_overview(dimensions: list):
 </div>"""
 
     avg = sum(d["score"] for d in dimensions) / len(dimensions) if dimensions else 0
-    avg_cls = "sg" if avg >= 7 else ("sw" if avg >= 4 else "sb")
     issues = sum(1 for d in dimensions if d["score"] < 7)
     issue_txt = f"{issues} need{'s' if issues == 1 else ''} attention" if issues else "all passing"
 
