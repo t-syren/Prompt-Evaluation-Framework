@@ -1,7 +1,7 @@
 import os
 import time
 import threading
-from typing import Optional, List, Tuple
+from typing import Optional, List
 import httpx
 import streamlit as st
 from datetime import datetime, timezone
@@ -311,23 +311,6 @@ def _run_pipeline_bg(
 
 
 # ── UI helpers ────────────────────────────────────────────────────────────────
-def score_color(score: int) -> Tuple[str, str, str]:
-    """Returns (text_color, bg_color, border_color) based on score."""
-    if score >= 7:
-        return "#16a34a", "#f0fdf4", "#bbf7d0"
-    if score >= 4:
-        return "#d97706", "#fffbeb", "#fde68a"
-    return "#dc2626", "#fef2f2", "#fecaca"
-
-
-def score_emoji(score: int) -> str:
-    if score >= 7:
-        return "🟢"
-    if score >= 4:
-        return "🟡"
-    return "🔴"
-
-
 def render_score_overview(dimensions: list):
     """8-cell grid: large mono score + colour bar per dimension."""
     def _classes(score: int):
@@ -364,7 +347,7 @@ def render_score_overview(dimensions: list):
         <span class="overall-denom">/10</span>
       </div>
       <div class="overall-label">Overall Score</div>
-      <div class="overall-sub">8 dimensions evaluated · {issue_txt}</div>
+      <div class="overall-sub">{len(dimensions)} dimensions evaluated · {issue_txt}</div>
     </div>
   </div>
   <div class="score-grid">{cells}</div>
@@ -399,7 +382,7 @@ def render_scorecard_details(dimensions: list):
         issues_html = "".join(
             f'<div class="detail-item"><div class="detail-dot" style="background:{dot_col}"></div>{i}</div>'
             for i in dim["issues"]
-        ) or f'<div class="detail-item" style="color:rgba(74,222,128,0.5);">No critical issues</div>'
+        ) or '<div class="detail-item" style="color:rgba(74,222,128,0.5);">No critical issues</div>'
 
         suggs_html = "".join(
             f'<div class="detail-item"><div class="detail-dot" style="background:#4ade80"></div>{s}</div>'
@@ -453,8 +436,8 @@ def render_comparison(original_eval: dict, fixed_eval: dict):
     rows = ""
     for name in orig_dims:
         o = orig_dims.get(name, 0)
-        f = fix_dims.get(name, o)
-        d = f - o
+        fix_score = fix_dims.get(name, o)
+        d = fix_score - o
         dc = "#4ade80" if d > 0 else ("#f87171" if d < 0 else "rgba(255,255,255,0.25)")
         ds = "+" if d > 0 else ""
         da = "↑" if d > 0 else ("↓" if d < 0 else "—")
@@ -462,7 +445,7 @@ def render_comparison(original_eval: dict, fixed_eval: dict):
 <div class="compare-row">
   <span class="compare-dim">{name}</span>
   {_mini(o)}
-  {_mini(f)}
+  {_mini(fix_score)}
   <div class="delta-cell" style="color:{dc};">{da} {ds}{d}</div>
 </div>"""
 
@@ -804,7 +787,6 @@ if st.session_state.evaluation:
 """, unsafe_allow_html=True)
         for attack in sr["attacks"]:
             label = "Broke intent" if attack["verdict"] == "PASS" else "Intent preserved"
-            icon_col = "#f87171" if attack["verdict"] == "PASS" else "#4ade80"
             with st.expander(f"`{attack['attack_type']}` — {label}"):
                 st.markdown(f"**Attack input:** {attack['input']}")
                 st.markdown(f"**Reason:** {attack['reason']}")
