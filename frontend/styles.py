@@ -202,8 +202,10 @@ button[data-testid="baseButton-primary"]:hover,
 }}
 
 /* ── TEXT INPUTS ── */
+[data-testid="stTextArea"] textarea,
 .stTextArea textarea {{
   background: rgba(255,255,255,0.04) !important;
+  background-color: rgba(255,255,255,0.04) !important;
   border: 1px solid rgba(255,255,255,0.1) !important;
   border-radius: 10px !important;
   color: rgba(255,255,255,0.85) !important;
@@ -212,26 +214,49 @@ button[data-testid="baseButton-primary"]:hover,
   font-size: 13.5px !important; line-height: 1.65 !important;
   caret-color: #FF3621 !important;
 }}
+[data-testid="stTextArea"] textarea:focus,
 .stTextArea textarea:focus {{
   border-color: rgba(255,54,33,0.4) !important;
   box-shadow: 0 0 0 3px rgba(255,54,33,0.1) !important;
 }}
+[data-testid="stTextArea"] textarea::placeholder,
 .stTextArea textarea::placeholder {{
   color: rgba(255,255,255,0.2) !important;
   -webkit-text-fill-color: rgba(255,255,255,0.2) !important;
 }}
+[data-testid="stTextInput"] input,
+.stTextInput input,
 .stTextInput > div > div > input {{
   background: rgba(255,255,255,0.04) !important;
+  background-color: rgba(255,255,255,0.04) !important;
   border: 1px solid rgba(255,255,255,0.1) !important;
   border-radius: 8px !important;
   color: rgba(255,255,255,0.85) !important;
   -webkit-text-fill-color: rgba(255,255,255,0.85) !important;
+  caret-color: #FF3621 !important;
 }}
+[data-testid="stTextInput"] input:focus,
+.stTextInput input:focus,
 .stTextInput > div > div > input:focus {{
   border-color: rgba(255,54,33,0.4) !important;
   box-shadow: 0 0 0 3px rgba(255,54,33,0.1) !important;
 }}
-.stTextArea label, .stTextInput label, [data-testid="stWidgetLabel"] p {{
+[data-testid="stTextInput"] input::placeholder,
+.stTextInput input::placeholder {{
+  color: rgba(255,255,255,0.2) !important;
+  -webkit-text-fill-color: rgba(255,255,255,0.2) !important;
+}}
+/* Fix browser autofill injecting white background */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {{
+  -webkit-box-shadow: 0 0 0 60px #09090e inset !important;
+  -webkit-text-fill-color: rgba(255,255,255,0.85) !important;
+  caret-color: #FF3621 !important;
+}}
+[data-testid="stWidgetLabel"] p,
+.stTextArea label, .stTextInput label {{
   color: rgba(255,255,255,0.45) !important;
   -webkit-text-fill-color: rgba(255,255,255,0.45) !important;
 }}
