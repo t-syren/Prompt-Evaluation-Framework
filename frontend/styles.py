@@ -302,7 +302,7 @@ def nav_html(active: str) -> str:
 
     return f"""
 <nav class="topnav">
-  <a class="nav-logo" href="/">
+  <a class="nav-logo" href="/" target="_self">
     <div class="logo-mark">
       <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
         <path d="M7 2L12 5V9L7 12L2 9V5L7 2Z" stroke="white" stroke-width="1.5" stroke-linejoin="round"/>
@@ -313,27 +313,27 @@ def nav_html(active: str) -> str:
   </a>
   <div class="nav-divider"></div>
   <div class="nav-links">
-    <a class="{_cls('home')}" href="/">
+    <a class="{_cls('home')}" href="/" target="_self">
       <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
         <path d="M2 7L7 2l5 5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
         <path d="M3.5 5.5V11a.5.5 0 00.5.5h2.5V8.5h2V11.5H11a.5.5 0 00.5-.5V5.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
       Home
     </a>
-    <a class="{_cls('get_started')}" href="/Get_Started">
+    <a class="{_cls('get_started')}" href="/Get_Started" target="_self">
       <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
         <circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.4"/>
         <path d="M7 4.5v3l1.5 1.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
       </svg>
       Get Started
     </a>
-    <a class="{_cls('evaluate')}" href="/Evaluate_Fix">
+    <a class="{_cls('evaluate')}" href="/Evaluate_Fix" target="_self">
       <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
         <path d="M3 7h3l2-4 2 8 2-4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
       Evaluate &amp; Fix
     </a>
-    <a class="{_cls('settings')}" href="/Settings">
+    <a class="{_cls('settings')}" href="/Settings" target="_self">
       <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
         <circle cx="7" cy="7" r="2" stroke="currentColor" stroke-width="1.4"/>
         <path d="M7 1.5v1.7M7 10.8v1.7M1.5 7h1.7M10.8 7h1.7M3.4 3.4l1.2 1.2M9.4 9.4l1.2 1.2M10.6 3.4L9.4 4.6M4.6 9.4L3.4 10.6" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>

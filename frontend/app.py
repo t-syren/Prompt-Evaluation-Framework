@@ -201,13 +201,13 @@ st.markdown("""
   <h1 class="hero-title">Smarter prompts,<br><span class="hero-title-grad">scored instantly.</span></h1>
   <p class="hero-sub">Paste any LLM prompt. Get scored across 8 quality dimensions — clarity, role, format, context, constraints, tone, bias, toxicity — with AI-powered fixes in seconds.</p>
   <div class="hero-actions">
-    <a class="btn-hero-primary" href="/Evaluate_Fix">
+    <a class="btn-hero-primary" href="/Evaluate_Fix" target="_self">
       <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
         <path d="M3.5 8h4l2.5-5 2 10 2.5-5" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
       Evaluate a Prompt
     </a>
-    <a class="btn-hero-ghost" href="/Get_Started">
+    <a class="btn-hero-ghost" href="/Get_Started" target="_self">
       <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
         <circle cx="7.5" cy="7.5" r="6" stroke="currentColor" stroke-width="1.5"/>
         <path d="M7.5 5v3l2 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
@@ -239,7 +239,7 @@ st.markdown("""
       </div>
       <div class="feature-title">Deep Evaluation</div>
       <div class="feature-desc">G-Eval across 6 quality dimensions plus Bias &amp; Toxicity safety metrics. Chain-of-thought reasoning explains every score.</div>
-      <a class="feature-cta" href="/Evaluate_Fix">Start evaluating <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6h8M7 3l3 3-3 3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+      <a class="feature-cta" href="/Evaluate_Fix" target="_self">Start evaluating <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6h8M7 3l3 3-3 3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
     </div>
     <div class="feature-card">
       <div class="feature-icon-wrap icon-indigo">
@@ -250,7 +250,7 @@ st.markdown("""
       </div>
       <div class="feature-title">Auto-Fix &amp; Refine</div>
       <div class="feature-desc">Get a single best fix or 3 variants to compare. Regression guard ensures fixes never lower a passing dimension.</div>
-      <a class="feature-cta" href="/Evaluate_Fix">Fix a prompt <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6h8M7 3l3 3-3 3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+      <a class="feature-cta" href="/Evaluate_Fix" target="_self">Fix a prompt <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6h8M7 3l3 3-3 3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
     </div>
     <div class="feature-card">
       <div class="feature-icon-wrap icon-teal">
@@ -261,7 +261,7 @@ st.markdown("""
       </div>
       <div class="feature-title">Stress &amp; Hallucination</div>
       <div class="feature-desc">Probe adversarial robustness with jailbreak attacks. Detect hallucination risk before your prompt hits production.</div>
-      <a class="feature-cta" href="/Evaluate_Fix">Run a test <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6h8M7 3l3 3-3 3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+      <a class="feature-cta" href="/Evaluate_Fix" target="_self">Run a test <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6h8M7 3l3 3-3 3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
     </div>
   </div>
 </div>
