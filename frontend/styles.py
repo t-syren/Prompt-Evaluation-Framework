@@ -422,12 +422,33 @@ def inject_sidebar_killer() -> None:
             '[data-testid="stSidebarCollapsedControl"]{display:none!important;visibility:hidden!important;}'
           ].join('');
 
+          // Input overrides — injected directly into head so they beat emotion CSS
+          var INPUT_CSS = [
+            'textarea,input[type="text"],input[type="password"],input[type="email"],input[type="number"],input[type="search"]{',
+            'background:#0d0d14!important;background-color:#0d0d14!important;',
+            'color:rgba(255,255,255,0.85)!important;',
+            '-webkit-text-fill-color:rgba(255,255,255,0.85)!important;',
+            'caret-color:#FF3621!important;}',
+            'textarea::placeholder,input::placeholder{',
+            'color:rgba(255,255,255,0.25)!important;',
+            '-webkit-text-fill-color:rgba(255,255,255,0.25)!important;}',
+            'input:-webkit-autofill,input:-webkit-autofill:focus{',
+            '-webkit-box-shadow:0 0 0 60px #0d0d14 inset!important;',
+            '-webkit-text-fill-color:rgba(255,255,255,0.85)!important;}'
+          ].join('');
+
           // Inject persistent <style> into parent <head>
           if (!parent.document.getElementById('_pef_no_sidebar')) {
             var s = parent.document.createElement('style');
             s.id = '_pef_no_sidebar';
             s.textContent = HIDE_CSS;
             parent.document.head.appendChild(s);
+          }
+          if (!parent.document.getElementById('_pef_inputs')) {
+            var si = parent.document.createElement('style');
+            si.id = '_pef_inputs';
+            si.textContent = INPUT_CSS;
+            parent.document.head.appendChild(si);
           }
 
           // Also imperatively hide on every DOM change (catches transition frames)
