@@ -14,8 +14,14 @@ def base_css() -> str:
 
 html, body, .stApp {{
   font-family: 'Inter', sans-serif !important;
-  background: #09090e !important;
   color: #e2e8f0 !important;
+}}
+.stApp {{
+  background:
+    radial-gradient(ellipse 60% 40% at 15% 0%, rgba(255,54,33,0.13) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 30% at 85% 20%, rgba(99,102,241,0.10) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 40% at 60% 90%, rgba(6,182,212,0.07) 0%, transparent 60%),
+    #09090e !important;
 }}
 
 /* ── Hide ALL Streamlit chrome ── */
@@ -30,15 +36,16 @@ html, body, .stApp {{
 footer {{ display: none !important; }}
 header {{ display: none !important; }}
 
-/* ── Remove Streamlit default padding ── */
+/* ── Streamlit layout reset ── */
 .main .block-container,
 .stMainBlockContainer,
 div.block-container,
 [data-testid="stMainBlockContainer"] {{
-  padding-top: 0 !important;
+  padding-top: 52px !important;
   margin-top: 0 !important;
-  padding-left: 0 !important;
-  padding-right: 0 !important;
+  padding-left: 28px !important;
+  padding-right: 28px !important;
+  padding-bottom: 80px !important;
   max-width: 100% !important;
 }}
 .main, section[data-testid="stMain"] {{
@@ -97,16 +104,6 @@ div.block-container,
   animation: pulseDot 2s ease-in-out infinite;
 }}
 
-/* ── PAGE BACKGROUND ── */
-.page-bg {{
-  min-height: 100vh;
-  background:
-    radial-gradient(ellipse 60% 40% at 15% 0%, rgba(255,54,33,0.13) 0%, transparent 60%),
-    radial-gradient(ellipse 40% 30% at 85% 20%, rgba(99,102,241,0.10) 0%, transparent 60%),
-    radial-gradient(ellipse 50% 40% at 60% 90%, rgba(6,182,212,0.07) 0%, transparent 60%),
-    #09090e;
-  padding: 52px 28px 80px;
-}}
 
 /* ── GLASS CARD ── */
 .glass-card {{
@@ -349,10 +346,8 @@ def nav_html(active: str) -> str:
     Connected
   </div>
 </nav>
-<div class="page-bg">
 """
 
 
 def nav_close() -> str:
-    """Close the .page-bg div opened by nav_html."""
-    return "</div>"
+    return ""
