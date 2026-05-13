@@ -25,9 +25,29 @@ html, body, .stApp {{
 }}
 
 /* ── Hide ALL Streamlit chrome ── */
-[data-testid="stSidebar"] {{ display: none !important; }}
+[data-testid="stSidebar"] {{
+  display: none !important;
+  width: 0 !important;
+  min-width: 0 !important;
+  max-width: 0 !important;
+  overflow: hidden !important;
+  transition: none !important;
+  animation: none !important;
+}}
+[data-testid="stSidebarContent"] {{
+  display: none !important;
+  width: 0 !important;
+  overflow: hidden !important;
+}}
+section[data-testid="stSidebar"] {{
+  display: none !important;
+  width: 0 !important;
+  min-width: 0 !important;
+}}
 [data-testid="collapsedControl"] {{ display: none !important; }}
 [data-testid="stSidebarCollapsedControl"] {{ display: none !important; }}
+[data-testid="stSidebarNavItems"] {{ display: none !important; }}
+[data-testid="stSidebarNavSeparator"] {{ display: none !important; }}
 [data-testid="stHeader"] {{ display: none !important; }}
 [data-testid="stToolbar"] {{ display: none !important; }}
 [data-testid="stDecoration"] {{ display: none !important; }}
